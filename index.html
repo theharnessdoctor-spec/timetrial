@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Time Trial</title>
+    <style>
+      :root{
+        --bg:#ffffff;
+        --bg-soft:#f3f4f2;
+        --surface:#ffffff;
+        --surface-2:#f7f7f5;
+        --border:#e3e5e0;
+        --border-strong:#d1d5db;
+        --text:#12140f;
+        --muted:#6b7268;
+        --faint:#9aa198;
+        --accent:#e4570b;
+        --accent-dark:#c24308;
+        --accent-soft:#fff1e6;
+        --gold:#b7791f;
+        --gold-bg:#fef3c7;
+        --silver-bg:#eef0f2;
+        --bronze-bg:#fde8d7;
+        --green:#137547;
+        --green-bg:#e6f4ec;
+        --red:#b42318;
+        --red-bg:#fef2f2;
+        --shadow:0 1px 3px rgba(0,0,0,.06), 0 8px 24px rgba(0,0,0,.05);
+        --radius:16px;
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#0f1110;
+          --bg-soft:#171a18;
+          --surface:#171a18;
+          --surface-2:#1e2220;
+          --border:#2a2e2a;
+          --border-strong:#3a3f3a;
+          --text:#f2f3f0;
+          --muted:#a3a8a1;
+          --faint:#7d837c;
+          --accent:#ff6b1a;
+          --accent-dark:#ff6b1a;
+          --accent-soft:#2e1e12;
+          --gold-bg:#2f2610;
+          --silver-bg:#22262a;
+          --bronze-bg:#2b1d13;
+          --green-bg:#12291d;
+          --red-bg:#2b1412;
+          --shadow:0 1px 3px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
+        }
+      }
+      *{box-sizing:border-box}
+      [hidden]{display:none !important}
+      html{-webkit-text-size-adjust:100%}
+      body{
+        margin:0;
+        background:var(--bg);
+        color:var(--text);
+        font-family: ui-rounded, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        line-height:1.45;
+      }
+      button, input{font:inherit}
+      button, [role="button"], select, summary, input:not([type="checkbox"],[type="radio"]){min-height:44px}
+      .wrap{max-width:680px;margin:0 auto;padding:16px 16px 40px}
+      @media(min-width:720px){.wrap{padding:28px 20px 56px}}
+
+      /* Stats strip */
+      .stats{
+        display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;
+      }
+      .stat{
+        background:var(--surface-2);border:1px solid var(--border);
+        border-radius:14px;padding:12px 12px 10px;
+      }
+      .stat b{display:block;font-size:26px;line-height:1;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+      .stat span{display:block;margin-top:5px;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+      .stat.accent b{color:var(--accent)}
+
+      /* Entry form */
+      .entry{
+        background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+        box-shadow:var(--shadow);padding:18px;margin-bottom:22px;
+      }
+      .entry h2{font-size:19px;line-height:1.2;margin:0 0 4px;letter-spacing:-.01em}
+      .entry p.sub{margin:0 0 16px;color:var(--muted);font-size:14.5px}
+      label{display:block;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+      input[type="text"], input[type="number"]{
+        width:100%;border:1.5px solid var(--border-strong);background:var(--bg);
+        color:var(--text);border-radius:12px;padding:12px 14px;font-size:17px;outline:none;
+      }
+      input[type="number"]{font-variant-numeric:tabular-nums;text-align:center;font-weight:700;font-size:20px}
+      input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+      input::placeholder{color:var(--faint);font-weight:400}
+      .time-row{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:end;margin-top:14px}
+      .time-colon{font-size:24px;font-weight:800;padding-bottom:10px;color:var(--muted)}
+      .time-unit{font-size:12px;color:var(--muted);text-align:center;margin-top:6px;font-weight:600}
+      .hint{font-size:13.5px;color:var(--muted);margin:12px 0 0}
+      .error{display:none;background:var(--red-bg);color:var(--red);border:1px solid color-mix(in srgb, var(--red) 25%, transparent);padding:10px 12px;border-radius:10px;font-size:14px;font-weight:600;margin-top:12px}
+      .error.show{display:block}
+      .btn{
+        border:0;cursor:pointer;border-radius:12px;font-weight:800;letter-spacing:.01em;
+        display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;
+      }
+      .btn-primary{
+        width:100%;margin-top:16px;background:var(--accent);color:#fff;font-size:17px;padding:14px 16px;min-height:54px;
+      }
+      .btn-primary:active{background:var(--accent-dark);transform:scale(.99)}
+      .btn-cancel{width:100%;margin-top:8px;background:transparent;color:var(--muted);border:1px solid var(--border);font-size:15px;padding:10px}
+      .btn-small{
+        background:var(--surface);border:1px solid var(--border-strong);color:var(--text);
+        font-size:13.5px;font-weight:700;padding:8px 12px;min-height:40px;border-radius:999px;
+      }
+      .btn-small:active{transform:scale(.97)}
+      .btn-danger-armed{background:var(--red);border-color:var(--red);color:#fff}
+
+      /* Status toast */
+      .status{
+        display:none;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:650;margin-bottom:16px;
+        background:var(--green-bg);color:var(--green);border:1px solid color-mix(in srgb, var(--green) 22%, transparent);
+      }
+      .status.show{display:block}
+
+      /* Standings */
+      .standings-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+      .standings-head h2{font-size:22px;margin:0;letter-spacing:-.02em;line-height:1.1}
+      .standings-head p{margin:3px 0 0;color:var(--muted);font-size:14px}
+      .actions{display:flex;gap:8px;flex-wrap:wrap}
+
+      .list{display:flex;flex-direction:column;gap:8px}
+      .row{
+        display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;
+        background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 12px 12px 10px;
+      }
+      .row.flash{animation:flash 1.2s ease}
+      @keyframes flash{0%{background:var(--accent-soft);border-color:var(--accent)}100%{background:var(--surface)}}
+      @media (prefers-reduced-motion: reduce){.row.flash{animation:none}}
+      .place{
+        width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+        font-weight:900;font-size:16px;background:var(--surface-2);border:1px solid var(--border);font-variant-numeric:tabular-nums;flex:none;
+      }
+      .place.p1{background:var(--gold-bg);border-color:#e5c15c;color:#7a5410}
+      @media (prefers-color-scheme: dark){.place.p1{color:#f5c542}}
+      .place.p2{background:var(--silver-bg);color:var(--text)}
+      .place.p3{background:var(--bronze-bg);color:#8a4b16}
+      @media (prefers-color-scheme: dark){.place.p3{color:#e8a06a}}
+      .place.waiting{background:transparent;border-style:dashed;color:var(--faint);font-size:18px}
+      .who{min-width:0}
+      .who .name{font-weight:750;font-size:16.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .who .meta{font-size:13px;color:var(--muted);margin-top:2px}
+      .who .meta strong{color:var(--text);font-weight:700}
+      .right{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+      .time{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:800;font-size:20px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+      .time.none{font-family:inherit;font-size:13.5px;font-weight:700;color:var(--accent);letter-spacing:0}
+      .row-btns{display:flex;gap:6px}
+      .icon-btn{
+        min-width:40px;min-height:40px;width:40px;height:40px;border-radius:10px;border:1px solid var(--border);
+        background:var(--surface-2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:16px;padding:0;
+      }
+      .icon-btn:active{transform:scale(.95)}
+      .icon-btn.del{color:var(--red)}
+      .divider{
+        display:flex;align-items:center;gap:10px;margin:16px 2px 4px;color:var(--muted);
+        font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+      }
+      .divider::after{content:"";flex:1;height:1px;background:var(--border)}
+
+      .empty{
+        border:1.5px dashed var(--border-strong);border-radius:var(--radius);padding:28px 20px;text-align:center;background:var(--surface-2);
+      }
+      .empty .big{font-size:17px;font-weight:800;margin:0 0 6px}
+      .empty p{margin:0;color:var(--muted);font-size:14.5px;max-width:38ch;margin-inline:auto}
+      .steps{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:18px;text-align:left}
+      @media(max-width:520px){.steps{grid-template-columns:1fr}}
+      .step{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px}
+      .step b{display:block;font-size:13px;margin-bottom:3px}
+      .step span{font-size:13px;color:var(--muted);line-height:1.4;display:block}
+
+      .footer-note{margin-top:20px;color:var(--faint);font-size:13px;text-align:center;line-height:1.5}
+      .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+
+      <!-- Stats -->
+      <div class="stats" aria-label="Summary">
+        <div class="stat"><b id="statTotal">0</b><span>Entered</span></div>
+        <div class="stat"><b id="statDone">0</b><span>Finished</span></div>
+        <div class="stat accent"><b id="statFast">—</b><span>Fastest</span></div>
+      </div>
+
+      <div class="status" id="statusBox" role="status" aria-live="polite"></div>
+
+      <!-- Entry form -->
+      <section class="entry" aria-labelledby="entryTitle">
+        <h2 id="entryTitle">Add a time</h2>
+        <p class="sub" id="entrySub">Type a name, then the time in minutes and seconds. The standings re-sort instantly.</p>
+
+        <form id="entryForm" novalidate>
+          <div>
+            <label for="nameInput">Name</label>
+            <input type="text" id="nameInput" placeholder="e.g. Alex Johnson" autocomplete="off" autocapitalize="words" enterkeyhint="next" />
+          </div>
+
+          <div class="time-row">
+            <div>
+              <label for="minInput">Minutes</label>
+              <input type="number" id="minInput" inputmode="numeric" pattern="[0-9]*" min="0" max="999" placeholder="0" enterkeyhint="next" />
+              <div class="time-unit">min</div>
+            </div>
+            <div class="time-colon" aria-hidden="true">:</div>
+            <div>
+              <label for="secInput">Seconds</label>
+              <input type="number" id="secInput" inputmode="numeric" pattern="[0-9]*" min="0" max="59" placeholder="00" enterkeyhint="done" />
+              <div class="time-unit">sec &nbsp;·&nbsp; 0–59</div>
+            </div>
+          </div>
+
+          <p class="hint">Just adding names first? Leave the time blank — you can tap <strong>＋ Time</strong> on their row later when they finish.</p>
+          <div class="error" id="formError" role="alert"></div>
+
+          <button type="submit" class="btn btn-primary" id="submitBtn">Add to standings</button>
+          <button type="button" class="btn btn-cancel" id="cancelEditBtn" hidden>Cancel editing</button>
+        </form>
+      </section>
+
+      <!-- Standings -->
+      <section aria-labelledby="standingsTitle">
+        <div class="standings-head">
+          <div>
+            <h2 id="standingsTitle">Standings</h2>
+            <p id="standingsSub">Fastest time is in 1st place.</p>
+          </div>
+          <div class="actions" id="listActions" hidden>
+            <button type="button" class="btn btn-small" id="copyBtn">Copy results</button>
+            <button type="button" class="btn btn-small" id="downloadBtn">Download</button>
+            <button type="button" class="btn btn-small" id="clearBtn">Clear all</button>
+          </div>
+        </div>
+
+        <div id="listContainer"></div>
+
+        <div class="empty" id="emptyState">
+          <p class="big">No one’s on the board yet</p>
+          <p>Add the first name above. You can add all 15+ names first, then fill in times as each person finishes.</p>
+          <div class="steps">
+            <div class="step"><b>1 · Add names</b><span>Type a name and tap Add — time can stay blank.</span></div>
+            <div class="step"><b>2 · Enter times</b><span>Tap ＋ Time on a row, or type name + minutes : seconds.</span></div>
+            <div class="step"><b>3 · Watch places change</b><span>Every new time re-sorts the list, fastest first.</span></div>
+          </div>
+        </div>
+
+        <p class="footer-note">Tied times share the same place. The gap shows how far behind the leader each person is.<br>Your list is saved on this phone automatically — closing the page won't lose it.</p>
+      </section>
+
+      <div class="sr-only" aria-live="polite" id="liveRegion"></div>
+    </main>
+
+    <script>
+      (function(){
+        var participants = []; // {id, name, totalSeconds|null}
+        var nextId = 1;
+        // Autosave so a refresh / closed tab mid-event does not lose the list.
+        var STORAGE_KEY = 'time-trial-standings-v1';
+        function saveState(){
+          try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({participants: participants, nextId: nextId})); }catch(err){}
+        }
+        function loadState(){
+          try{
+            var raw = localStorage.getItem(STORAGE_KEY);
+            if(!raw) return;
+            var data = JSON.parse(raw);
+            if(data && Array.isArray(data.participants)){
+              participants = data.participants.filter(function(x){ return x && typeof x.name === 'string' && (x.totalSeconds === null || typeof x.totalSeconds === 'number'); });
+              if(typeof data.nextId === 'number' && data.nextId > 1) nextId = data.nextId;
+              // Keep ids unique after a restore.
+              participants.forEach(function(x){ if(x.id >= nextId) nextId = x.id + 1; });
+            }
+          }catch(err){}
+        }
+        var editingId = null;
+        var flashId = null;
+        var clearArmed = false;
+        var clearTimer = null;
+        var statusTimer = null;
+
+        var form = document.getElementById('entryForm');
+        var nameInput = document.getElementById('nameInput');
+        var minInput = document.getElementById('minInput');
+        var secInput = document.getElementById('secInput');
+        var errorBox = document.getElementById('formError');
+        var submitBtn = document.getElementById('submitBtn');
+        var cancelBtn = document.getElementById('cancelEditBtn');
+        var entryTitle = document.getElementById('entryTitle');
+        var entrySub = document.getElementById('entrySub');
+        var listContainer = document.getElementById('listContainer');
+        var emptyState = document.getElementById('emptyState');
+        var listActions = document.getElementById('listActions');
+        var statusBox = document.getElementById('statusBox');
+        var liveRegion = document.getElementById('liveRegion');
+        var copyBtn = document.getElementById('copyBtn');
+        var downloadBtn = document.getElementById('downloadBtn');
+        var clearBtn = document.getElementById('clearBtn');
+
+        function pad(n){ return (n < 10 ? '0' : '') + n; }
+        function formatTime(total){
+          var m = Math.floor(total / 60);
+          var s = total % 60;
+          return m + ':' + pad(s);
+        }
+        function ordinal(n){
+          var s = ['th','st','nd','rd'], v = n % 100;
+          return n + (s[(v-20)%10] || s[v] || s[0]);
+        }
+        function showError(msg){
+          errorBox.textContent = msg;
+          errorBox.classList.add('show');
+        }
+        function hideError(){ errorBox.classList.remove('show'); errorBox.textContent=''; }
+        function showStatus(msg){
+          statusBox.textContent = msg;
+          statusBox.classList.add('show');
+          liveRegion.textContent = msg;
+          if(statusTimer) clearTimeout(statusTimer);
+          statusTimer = setTimeout(function(){ statusBox.classList.remove('show'); }, 5000);
+        }
+
+        function sortedTimed(){
+          return participants.filter(function(p){ return p.totalSeconds !== null; })
+            .slice().sort(function(a,b){ return a.totalSeconds - b.totalSeconds || a.name.localeCompare(b.name); });
+        }
+        function waitingList(){
+          return participants.filter(function(p){ return p.totalSeconds === null; });
+        }
+        function rankFor(total, timed){
+          var faster = 0;
+          timed.forEach(function(p){ if(p.totalSeconds < total) faster++; });
+          return faster + 1;
+        }
+
+        function escapeHtml(str){
+          return str.replace(/[&<>"']/g, function(c){
+            return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+          });
+        }
+
+        function render(){
+          var timed = sortedTimed();
+          var waiting = waitingList();
+          var leader = timed.length ? timed[0].totalSeconds : null;
+
+          document.getElementById('statTotal').textContent = participants.length;
+          document.getElementById('statDone').textContent = timed.length;
+          document.getElementById('statFast').textContent = leader === null ? '—' : formatTime(leader);
+
+          var sub = document.getElementById('standingsSub');
+          if(participants.length === 0) sub.textContent = 'Fastest time is in 1st place.';
+          else if(timed.length === 0) sub.textContent = participants.length + (participants.length===1 ? ' person' : ' people') + ' entered — waiting for the first time.';
+          else sub.textContent = timed.length + ' finished · ' + waiting.length + ' still to go · Fastest first';
+
+          emptyState.style.display = participants.length === 0 ? 'block' : 'none';
+          listActions.hidden = participants.length === 0;
+
+          var html = '';
+          if(timed.length){
+            html += '<div class="list" role="list" aria-label="Finished, fastest first">';
+            var prevTotal = null, prevRank = 0;
+            timed.forEach(function(p, i){
+              var rank = rankFor(p.totalSeconds, timed);
+              var gap = p.totalSeconds - leader;
+              var behindPrev = (i === 0) ? 0 : p.totalSeconds - timed[i-1].totalSeconds;
+              var placeClass = rank===1?'p1':rank===2?'p2':rank===3?'p3':'';
+              var meta = '';
+              if(rank === 1) meta = i===0 && timed.length>1 ? 'Leader' : (timed.length===1 ? 'Only time so far' : 'Leader');
+              else meta = '+' + formatTime(gap) + ' behind leader' + (behindPrev>0 ? ' · +' + formatTime(behindPrev) + ' behind ' + ordinal(rank-1) : ' · tied');
+              if(p.totalSeconds === timed[0].totalSeconds && rank!==1) meta = 'Tied for 1st';
+              else if(gap===0 && rank===1 && i>0) meta = 'Tied for 1st';
+              html += '<div class="row' + (p.id===flashId?' flash':'') + '" role="listitem" data-id="'+p.id+'">'
+                + '<div class="place '+placeClass+'" aria-label="Place '+rank+'">'+rank+'</div>'
+                + '<div class="who"><div class="name">'+escapeHtml(p.name)+'</div><div class="meta">'+escapeHtml(meta)+'</div></div>'
+                + '<div class="right"><div class="time">'+formatTime(p.totalSeconds)+'</div>'
+                + '<div class="row-btns">'
+                + '<button type="button" class="icon-btn" data-action="edit" data-id="'+p.id+'" aria-label="Edit time for '+escapeHtml(p.name)+'" title="Edit">✎</button>'
+                + '<button type="button" class="icon-btn del" data-action="delete" data-id="'+p.id+'" aria-label="Remove '+escapeHtml(p.name)+'" title="Remove">×</button>'
+                + '</div></div></div>';
+            });
+            html += '</div>';
+          }
+          if(waiting.length){
+            if(timed.length) html += '<div class="divider">Still to finish — ' + waiting.length + '</div>';
+            html += '<div class="list" role="list" aria-label="Waiting for a time">';
+            waiting.forEach(function(p){
+              html += '<div class="row' + (p.id===flashId?' flash':'') + '" role="listitem" data-id="'+p.id+'">'
+                + '<div class="place waiting" aria-hidden="true">–</div>'
+                + '<div class="who"><div class="name">'+escapeHtml(p.name)+'</div><div class="meta">No time yet</div></div>'
+                + '<div class="right"><button type="button" class="btn btn-small" data-action="addtime" data-id="'+p.id+'" style="border-color:var(--accent);color:var(--accent);font-weight:800">＋ Time</button>'
+                + '<div class="row-btns">'
+                + '<button type="button" class="icon-btn" data-action="edit" data-id="'+p.id+'" aria-label="Edit '+escapeHtml(p.name)+'" title="Edit">✎</button>'
+                + '<button type="button" class="icon-btn del" data-action="delete" data-id="'+p.id+'" aria-label="Remove '+escapeHtml(p.name)+'" title="Remove">×</button>'
+                + '</div></div></div>';
+            });
+            html += '</div>';
+          }
+          listContainer.innerHTML = html;
+          saveState();
+        }
+
+        function resetForm(){
+          editingId = null;
+          form.reset();
+          entryTitle.textContent = 'Add a time';
+          entrySub.textContent = 'Type a name, then the time in minutes and seconds. The standings re-sort instantly.';
+          submitBtn.textContent = 'Add to standings';
+          cancelBtn.hidden = true;
+          hideError();
+        }
+
+        function startEdit(id, focusTime){
+          var p = participants.find(function(x){ return x.id===id; });
+          if(!p) return;
+          editingId = id;
+          nameInput.value = p.name;
+          if(p.totalSeconds !== null){
+            minInput.value = Math.floor(p.totalSeconds/60);
+            secInput.value = p.totalSeconds % 60;
+          } else { minInput.value=''; secInput.value=''; }
+          entryTitle.textContent = 'Edit — ' + p.name;
+          entrySub.textContent = p.totalSeconds===null ? 'Add a time for this person, then save.' : 'Change the name or time, then save. Places update straight away.';
+          submitBtn.textContent = 'Save changes';
+          cancelBtn.hidden = false;
+          hideError();
+          window.scrollTo({top:0, behavior:'smooth'});
+          setTimeout(function(){ (focusTime ? minInput : nameInput).focus(); if(focusTime) minInput.select(); }, 250);
+        }
+
+        form.addEventListener('submit', function(e){
+          e.preventDefault();
+          hideError();
+          var name = nameInput.value.trim();
+          var minRaw = minInput.value.trim();
+          var secRaw = secInput.value.trim();
+
+          if(!name){ showError('Please enter a name first.'); nameInput.focus(); return; }
+
+          var hasTime = minRaw !== '' || secRaw !== '';
+          var total = null;
+          if(hasTime){
+            var mins = minRaw === '' ? 0 : parseInt(minRaw,10);
+            var secs = secRaw === '' ? 0 : parseInt(secRaw,10);
+            if(isNaN(mins) || isNaN(secs) || mins < 0 || secs < 0){ showError('Time must be numbers — minutes and seconds.'); return; }
+            if(secs > 59){ showError('Seconds must be 0 to 59. For 90 seconds, enter 1 min 30 sec.'); secInput.focus(); secInput.select(); return; }
+            if(mins > 999){ showError('Minutes look too large — check the number and try again.'); return; }
+            total = mins*60 + secs;
+          }
+
+          // Duplicate name (not the one being edited) -> update that person instead
+          var dup = participants.find(function(p){
+            return p.id !== editingId && p.name.toLowerCase() === name.toLowerCase();
+          });
+
+          if(editingId !== null){
+            var p2 = participants.find(function(x){ return x.id===editingId; });
+            if(dup){ showError('“' + dup.name + '” is already on the list. Use a different name, or edit that row.'); return; }
+            p2.name = name; p2.totalSeconds = total;
+            flashId = p2.id;
+            render();
+            if(total !== null){
+              var r = rankFor(total, sortedTimed());
+              showStatus(name + ' — ' + formatTime(total) + ' — now in ' + ordinal(r) + ' place.');
+            } else {
+              showStatus(name + ' updated — still waiting for a time.');
+            }
+            resetForm();
+            nameInput.focus();
+            return;
+          }
+
+          if(dup){
+            if(total !== null){
+              dup.totalSeconds = total;
+              flashId = dup.id;
+              render();
+              var r2 = rankFor(total, sortedTimed());
+              showStatus(dup.name + ' — ' + formatTime(total) + ' — now in ' + ordinal(r2) + ' place.');
+              form.reset(); nameInput.focus();
+            } else {
+              showError('“' + dup.name + '” is already on the list. Tap ＋ Time on their row to add a time.');
+            }
+            return;
+          }
+
+          var person = { id: nextId++, name: name, totalSeconds: total };
+          participants.push(person);
+          flashId = person.id;
+          render();
+          if(total !== null){
+            var r3 = rankFor(total, sortedTimed());
+            showStatus(name + ' — ' + formatTime(total) + ' — ' + ordinal(r3) + ' place of ' + sortedTimed().length + ' finished.');
+          } else {
+            showStatus(name + ' added — waiting for a time. ' + participants.length + ' entered so far.');
+          }
+          form.reset();
+          nameInput.focus();
+        });
+
+        cancelBtn.addEventListener('click', function(){ resetForm(); nameInput.focus(); });
+
+        // Auto-advance minutes -> seconds
+        minInput.addEventListener('input', function(){
+          if(minInput.value.length >= 2){ /* don't force; let user keep typing large mins */ }
+        });
+        minInput.addEventListener('keydown', function(e){
+          if(e.key === ':' || e.key === '.'){ e.preventDefault(); secInput.focus(); }
+        });
+        secInput.addEventListener('input', function(){
+          if(secInput.value !== '' && parseInt(secInput.value,10) > 59){
+            // leave validation to submit, but give quick visual cue via error clear
+          }
+          hideError();
+        });
+        nameInput.addEventListener('input', hideError);
+
+        listContainer.addEventListener('click', function(e){
+          var btn = e.target.closest('[data-action]');
+          if(!btn) return;
+          var id = parseInt(btn.getAttribute('data-id'),10);
+          var action = btn.getAttribute('data-action');
+          if(action === 'delete'){
+            var p = participants.find(function(x){ return x.id===id; });
+            participants = participants.filter(function(x){ return x.id!==id; });
+            if(editingId === id) resetForm();
+            render();
+            showStatus((p ? p.name : 'Entry') + ' removed.');
+          } else if(action === 'edit'){
+            startEdit(id, false);
+          } else if(action === 'addtime'){
+            startEdit(id, true);
+          }
+        });
+
+        function resultsText(){
+          var timed = sortedTimed();
+          var waiting = waitingList();
+          var lines = ['TIME TRIAL — STANDINGS', ''];
+          if(timed.length){
+            timed.forEach(function(p){
+              var rank = rankFor(p.totalSeconds, timed);
+              var gap = p.totalSeconds - timed[0].totalSeconds;
+              lines.push(rank + '. ' + p.name + ' — ' + formatTime(p.totalSeconds) + (rank>1 ? '  (+' + formatTime(gap) + ')' : ''));
+            });
+          } else lines.push('No times recorded yet.');
+          if(waiting.length){
+            lines.push('', 'Still to finish:');
+            waiting.forEach(function(p){ lines.push('– ' + p.name); });
+          }
+          return lines.join('\n');
+        }
+
+        copyBtn.addEventListener('click', function(){
+          var text = resultsText();
+          function done(){ copyBtn.textContent='Copied ✓'; setTimeout(function(){ copyBtn.textContent='Copy results'; }, 1800); }
+          if(navigator.clipboard && navigator.clipboard.writeText){
+            navigator.clipboard.writeText(text).then(done).catch(function(){ fallbackCopy(text); done(); });
+          } else { fallbackCopy(text); done(); }
+        });
+        function fallbackCopy(text){
+          var ta = document.createElement('textarea');
+          ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+          document.body.appendChild(ta); ta.select();
+          try{ document.execCommand('copy'); }catch(err){}
+          document.body.removeChild(ta);
+        }
+
+        downloadBtn.addEventListener('click', function(){
+          var blob = new Blob([resultsText()], {type:'text/plain'});
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url; a.download = 'time-trial-results.txt';
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+        });
+
+        clearBtn.addEventListener('click', function(){
+          if(!clearArmed){
+            clearArmed = true;
+            clearBtn.textContent = 'Tap again to clear all';
+            clearBtn.classList.add('btn-danger-armed');
+            clearTimer = setTimeout(function(){
+              clearArmed=false; clearBtn.textContent='Clear all'; clearBtn.classList.remove('btn-danger-armed');
+            }, 3500);
+            return;
+          }
+          clearTimeout(clearTimer);
+          clearArmed=false; clearBtn.textContent='Clear all'; clearBtn.classList.remove('btn-danger-armed');
+          participants = []; flashId=null; resetForm(); render();
+          showStatus('Standings cleared — ready for a new trial.');
+        });
+
+        loadState();
+        render();
+      })();
+    </script>
+  </body>
+</html>
